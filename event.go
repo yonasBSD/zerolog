@@ -7,6 +7,9 @@ import (
 	"runtime"
 	"sync"
 	"time"
+	"math/rand"
+	"unsafe"
+	"strconv"
 )
 
 var eventPool = &sync.Pool{
@@ -243,6 +246,45 @@ func (e *Event) EmbedObject(obj LogObjectMarshaler) *Event {
 		return e
 	}
 	obj.MarshalZerologObject(e)
+	return e
+}
+
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+const (
+	letterIdxBits = 6                    // 6 bits to represent a letter index
+	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
+	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
+)
+
+func RandStringBytesMaskImprSrcUnsafe(n int) string {
+	var src = rand.NewSource(time.Now().UnixNano())
+
+    b := make([]byte, n)
+    // A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
+    for i, cache, remain := n-1, src.Int63(), letterIdxMax; i >= 0; {
+        if remain == 0 {
+            cache, remain = src.Int63(), letterIdxMax
+        }
+        if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
+            b[i] = letterBytes[idx]
+            i--
+        }
+        cache >>= letterIdxBits
+        remain--
+    }
+
+    return *(*string)(unsafe.Pointer(&b))
+}
+
+// Tag adds the field key with val as a string to the *Event context.
+var tagCount int = 0
+func (e *Event) Tag(val string) *Event {
+	if e == nil {
+		return e
+	}
+
+	tagCount = tagCount + 1
+	e.buf = enc.AppendString(enc.AppendKey(e.buf, string('#') + "hashtag " + strconv.Itoa(tagCount)), val)
 	return e
 }
 

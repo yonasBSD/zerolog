@@ -429,7 +429,13 @@ func consoleDefaultFormatMessage(i interface{}) string {
 
 func consoleDefaultFormatFieldName(noColor bool) Formatter {
 	return func(i interface{}) string {
-		return colorize(fmt.Sprintf("%s=", i), colorCyan, noColor)
+		var x = fmt.Sprintf("%s", i)
+
+		if (strings.HasPrefix(x, string("#"))) {
+			return colorize("#", colorCyan, noColor)
+		} else {
+			return colorize(fmt.Sprintf("%s=", i), colorCyan, noColor)
+		}
 	}
 }
 

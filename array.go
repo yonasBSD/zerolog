@@ -67,6 +67,12 @@ func (a *Array) Object(obj LogObjectMarshaler) *Array {
 	return a
 }
 
+// Tag appends the val as a string to the array.
+func (a *Array) Tag(val string) *Array {
+	a.buf = enc.AppendString(enc.AppendArrayDelim(a.buf), val)
+	return a
+}
+
 // Str appends the val as a string to the array.
 func (a *Array) Str(val string) *Array {
 	a.buf = enc.AppendString(enc.AppendArrayDelim(a.buf), val)
